@@ -40,19 +40,44 @@ export function TabList() {
     const [tabs, setTabs] = useState(() => {
         const saved = localStorage.getItem('tabs-layout');
         const iconMap = {
-            lagerverwaltung: Package, dashboard: LayoutDashboard, banking: Landmark,
-            telefonie: Phone, accounting: UserRound, verkauf: ShoppingBag,
-            statistik: PieChart, 'post-office': Mail, administration: Settings,
-            help: HelpCircle, warenbestand: Package, auswahllisten: ListTodo,
-            einkauf: ShoppingCart, rechn: Receipt
+            lagerverwaltung: Package,
+            dashboard: LayoutDashboard,
+            banking: Landmark,
+            telefonie: Phone,
+            accounting: UserRound,
+            verkauf: ShoppingBag,
+            statistik: PieChart,
+            'post-office': Mail,
+            administration: Settings,
+            help: HelpCircle,
+            warenbestand: Package,
+            auswahllisten: ListTodo,
+            einkauf: ShoppingCart,
+            rechn: Receipt
         };
 
         if (saved) {
-            const parsed = JSON.parse(saved);
-            return parsed.map(t => ({ ...t, icon: iconMap[t.id] }));
+            try {
+                const parsed = JSON.parse(saved);
+                const savedTabs = parsed.map(t => ({ ...t, icon: iconMap[t.id] || Package }));
+
+                // Знаходимо вкладки, яких немає в збережених, але є в INITIAL_TABS
+                const initialIds = INITIAL_TABS.map(t => t.id);
+                const savedIds = savedTabs.map(t => t.id);
+                const missingTabs = INITIAL_TABS.filter(t => !savedIds.includes(t.id));
+
+                if (missingTabs.length > 0) {
+                    return [...savedTabs, ...missingTabs];
+                }
+                return savedTabs;
+            } catch (e) {
+                console.error("Failed to parse saved tabs", e);
+                return INITIAL_TABS;
+            }
         }
         return INITIAL_TABS;
     });
+
 
     const [activeTabId, setActiveTabId] = useState(tabs[0]?.id);
     const [visibleTabs, setVisibleTabs] = useState(tabs);
