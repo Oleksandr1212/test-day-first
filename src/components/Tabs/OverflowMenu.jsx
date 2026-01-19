@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X, Pin } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 export function OverflowMenu({ tabs, activeTabId, onSelect, onClose, isOpen, onToggle }) {
-    const menuRef = React.useRef(null);
+    const menuRef = useRef(null);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target) && isOpen) {
                 onToggle(false);

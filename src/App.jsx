@@ -6,10 +6,8 @@ function App() {
     <div className="h-screen bg-white flex flex-col overflow-hidden">
       <TabList />
 
-      {/* Головний контент */}
-      <main className="flex-1 bg-white p-6 overflow-hidden">
+      <main className="flex-1 bg-white px-16 pt-4 pb-12 overflow-hidden">
         <div className="w-full h-full bg-white rounded-[20px] border border-[#dadce0] shadow-[0_1px_2px_0_rgba(60,64,67,0.3),0_1px_3px_1px_rgba(60,64,67,0.15)] overflow-auto">
-          {/* Тут контент */}
         </div>
       </main>
 

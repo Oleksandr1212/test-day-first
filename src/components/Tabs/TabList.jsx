@@ -65,7 +65,6 @@ export function TabList() {
                 const parsed = JSON.parse(saved);
                 const savedTabs = parsed.map(t => ({ ...t, icon: iconMap[t.id] || Package }));
 
-                // Знаходимо вкладки, яких немає в збережених, але є в INITIAL_TABS
                 const initialIds = INITIAL_TABS.map(t => t.id);
                 const savedIds = savedTabs.map(t => t.id);
                 const missingTabs = INITIAL_TABS.filter(t => !savedIds.includes(t.id));
@@ -88,13 +87,11 @@ export function TabList() {
     const [overflowTabs, setOverflowTabs] = useState([]);
     const [isOverflowOpen, setIsOverflowOpen] = useState(false);
 
-    // Sync active tab with URL
     useEffect(() => {
         const currentTab = tabs.find(t => t.url === location.pathname);
         if (currentTab) {
             setActiveTabId(currentTab.id);
         } else if (location.pathname === '/') {
-            // Default to first tab if at root
             const firstTab = tabs[0];
             if (firstTab) {
                 navigate(firstTab.url, { replace: true });
@@ -116,7 +113,7 @@ export function TabList() {
         const handleResize = () => {
             if (!containerRef.current) return;
 
-            const containerWidth = containerRef.current.offsetWidth - 100; // Буффер
+            const containerWidth = containerRef.current.offsetWidth - 100; 
             let currentWidth = 0;
             const newVisible = [];
             const newOverflow = [];
@@ -158,7 +155,6 @@ export function TabList() {
     const togglePin = (id) => {
         setTabs(prev => {
             const newTabs = prev.map(t => t.id === id ? { ...t, pinned: !t.pinned } : t);
-            // Закріплені перші
             return [...newTabs.filter(t => t.pinned), ...newTabs.filter(t => !t.pinned)];
         });
     };
@@ -219,12 +215,10 @@ export function TabList() {
 
                                     const others = prev.filter(tab => tab.id !== t.id);
 
-                                    // Якщо вибрана вкладка закріплена, переміщуємо її на початок списку
                                     if (tabToMove.pinned) {
                                         return [tabToMove, ...others];
                                     }
 
-                                    // Якщо не закріплена, переміщуємо її на перше місце ПІСЛЯ всіх закріплених
                                     const firstUnpinnedIndex = others.findIndex(tab => !tab.pinned);
 
                                     if (firstUnpinnedIndex === -1) {
