@@ -45,16 +45,7 @@ export function TabList() {
                         ...t,
                         icon: ICON_MAP[t.id] || Package
                     }));
-
-                    const initialIds = INITIAL_TABS.map(t => t.id);
-                    const savedIds = tabsWithIcons.map(t => t.id);
-                    const missingTabs = INITIAL_TABS.filter(t => !savedIds.includes(t.id));
-
-                    if (missingTabs.length > 0) {
-                        setTabs([...tabsWithIcons, ...missingTabs]);
-                    } else {
-                        setTabs(tabsWithIcons);
-                    }
+                    setTabs(tabsWithIcons);
                 } else {
                     await initializeNewUser(uid, INITIAL_TABS);
                     setTabs(INITIAL_TABS);
