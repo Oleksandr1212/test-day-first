@@ -4,7 +4,8 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '../../utils/cn';
 
-export function TabItem({ tab, isActive, onSelect, onClose, onPin, isOverflow = false }) {
+export function TabItem({ tab, isActive, onSelect, onClose, onPin, isOverflow = false, className }) {
+
     const {
         attributes,
         listeners,
@@ -51,7 +52,8 @@ export function TabItem({ tab, isActive, onSelect, onClose, onPin, isOverflow = 
                     ? "bg-white text-[#1a1c1e] border-t-[3px] border-[#1877f2] font-semibold z-10 -mt-[3px] h-[43px] shadow-[0_-1px_3px_rgba(0,0,0,0.05)]"
                     : "bg-[#f8f9fa] text-[#5f6368] hover:bg-[#eceef1]",
                 isDragging && "opacity-50 shadow-lg scale-105 z-50",
-                tab.pinned && "min-w-[48px] max-w-[48px] px-2 justify-center"
+                tab.pinned && "min-w-[48px] max-w-[48px] px-2 justify-center",
+                className
             )}
         >
             <div className="flex items-center gap-2.5 overflow-hidden pointer-events-none">

@@ -13,6 +13,7 @@ import {
     sortableKeyboardCoordinates,
     horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { TabItem } from './TabItem';
 import { OverflowMenu } from './OverflowMenu';
 import { ChevronDown, LayoutDashboard, Landmark, Phone, UserRound, ShoppingBag, PieChart, Mail, Settings, HelpCircle, Package, ListTodo, ShoppingCart, Receipt } from 'lucide-react';
@@ -37,6 +38,9 @@ const INITIAL_TABS = [
 
 
 export function TabList() {
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const [tabs, setTabs] = useState(() => {
         const saved = localStorage.getItem('tabs-layout');
         const iconMap = {
@@ -79,10 +83,24 @@ export function TabList() {
     });
 
 
-    const [activeTabId, setActiveTabId] = useState(tabs[0]?.id);
-    const [visibleTabs, setVisibleTabs] = useState(tabs);
+    const [activeTabId, setActiveTabId] = useState(null);
+    const [visibleTabs, setVisibleTabs] = useState([]);
     const [overflowTabs, setOverflowTabs] = useState([]);
     const [isOverflowOpen, setIsOverflowOpen] = useState(false);
+
+    // Sync active tab with URL
+    useEffect(() => {
+        const currentTab = tabs.find(t => t.url === location.pathname);
+        if (currentTab) {
+            setActiveTabId(currentTab.id);
+        } else if (location.pathname === '/') {
+            // Default to first tab if at root
+            const firstTab = tabs[0];
+            if (firstTab) {
+                navigate(firstTab.url, { replace: true });
+            }
+        }
+    }, [location.pathname, tabs, navigate]);
 
     const containerRef = useRef(null);
     const sensors = useSensors(
@@ -160,15 +178,16 @@ export function TabList() {
                         items={visibleTabs.map(t => t.id)}
                         strategy={horizontalListSortingStrategy}
                     >
-                        <div className="flex overflow-hidden h-[40px] items-end">
+                        <div className="flex overflow-hidden h-[40px] items-end flex-1">
                             {visibleTabs.map((tab) => (
                                 <TabItem
                                     key={tab.id}
                                     tab={tab}
                                     isActive={activeTabId === tab.id}
-                                    onSelect={(t) => setActiveTabId(t.id)}
+                                    onSelect={(t) => navigate(t.url)}
                                     onClose={closeTab}
                                     onPin={() => togglePin(tab.id)}
+                                    className="flex-1 min-w-[120px] max-w-[200px]"
                                 />
                             ))}
                         </div>
@@ -196,9 +215,30 @@ export function TabList() {
                             isOpen={isOverflowOpen}
                             onToggle={setIsOverflowOpen}
                             onSelect={(t) => {
-                                setActiveTabId(t.id);
+                                setTabs(prev => {
+                                    const tabToMove = prev.find(tab => tab.id === t.id);
+                                    if (!tabToMove) return prev;
+
+                                    // Знаходимо всі інші вкладки
+                                    const others = prev.filter(tab => tab.id !== t.id);
+
+                                    // Знаходимо індекс першої незакріпленої вкладки
+                                    const firstUnpinnedIndex = others.findIndex(tab => !tab.pinned);
+
+                                    const newTabs = [...others];
+                                    if (firstUnpinnedIndex === -1) {
+                                        // Якщо всі закріплені або порожньо, додаємо в кінець
+                                        newTabs.push(tabToMove);
+                                    } else {
+                                        // Вставляємо перед першою незакріпленою
+                                        newTabs.splice(firstUnpinnedIndex, 0, tabToMove);
+                                    }
+                                    return newTabs;
+                                });
+                                navigate(t.url);
                                 setIsOverflowOpen(false);
                             }}
+
                             onClose={closeTab}
                             onPin={togglePin}
                         />
