@@ -122,7 +122,7 @@ export function TabList() {
             const newOverflow = [];
 
             tabs.forEach((tab) => {
-                const tabWidth = tab.pinned ? 40 : 150;
+                const tabWidth = tab.pinned ? 40 : 120;
                 if (currentWidth + tabWidth < containerWidth) {
                     newVisible.push(tab);
                     currentWidth += tabWidth;
@@ -130,6 +130,7 @@ export function TabList() {
                     newOverflow.push(tab);
                 }
             });
+
 
             setVisibleTabs(newVisible);
             setOverflowTabs(newOverflow);
@@ -204,9 +205,6 @@ export function TabList() {
                             )}
                         >
                             <ChevronDown size={18} strokeWidth={3} className={cn("text-white transition-transform duration-300", isOverflowOpen && "rotate-180")} />
-                            <span className="absolute -top-1.5 -right-1.5 bg-[#ea4335] text-white text-[10px] font-bold rounded-full w-[17px] h-[17px] flex items-center justify-center ring-2 ring-white shadow-sm">
-                                {overflowTabs.length}
-                            </span>
                         </button>
 
                         <OverflowMenu
@@ -219,25 +217,28 @@ export function TabList() {
                                     const tabToMove = prev.find(tab => tab.id === t.id);
                                     if (!tabToMove) return prev;
 
-                                    // Знаходимо всі інші вкладки
                                     const others = prev.filter(tab => tab.id !== t.id);
 
-                                    // Знаходимо індекс першої незакріпленої вкладки
+                                    // Якщо вибрана вкладка закріплена, переміщуємо її на початок списку
+                                    if (tabToMove.pinned) {
+                                        return [tabToMove, ...others];
+                                    }
+
+                                    // Якщо не закріплена, переміщуємо її на перше місце ПІСЛЯ всіх закріплених
                                     const firstUnpinnedIndex = others.findIndex(tab => !tab.pinned);
 
-                                    const newTabs = [...others];
                                     if (firstUnpinnedIndex === -1) {
-                                        // Якщо всі закріплені або порожньо, додаємо в кінець
-                                        newTabs.push(tabToMove);
-                                    } else {
-                                        // Вставляємо перед першою незакріпленою
-                                        newTabs.splice(firstUnpinnedIndex, 0, tabToMove);
+                                        return [...others, tabToMove];
                                     }
+
+                                    const newTabs = [...others];
+                                    newTabs.splice(firstUnpinnedIndex, 0, tabToMove);
                                     return newTabs;
                                 });
                                 navigate(t.url);
                                 setIsOverflowOpen(false);
                             }}
+
 
                             onClose={closeTab}
                             onPin={togglePin}

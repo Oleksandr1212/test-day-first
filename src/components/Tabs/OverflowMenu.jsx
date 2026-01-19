@@ -25,7 +25,7 @@ export function OverflowMenu({ tabs, activeTabId, onSelect, onClose, isOpen, onT
     return (
         <div
             ref={menuRef}
-            className="absolute right-0 mt-5 w-80 bg-white border border-[#dee2e6] shadow-[0_10px_35px_rgba(0,0,0,0.1)] rounded-lg py-1.5 z-50 overflow-hidden ring-1 ring-black ring-opacity-5 translate-y-2 animate-in fade-in slide-in-from-top-2 duration-300"
+            className="absolute right-0 top-full mt-1 w-80 bg-white border border-[#dee2e6] shadow-[0_10px_35px_rgba(0,0,0,0.1)] rounded-lg py-1.5 z-50 overflow-hidden ring-1 ring-black ring-opacity-5 animate-in fade-in slide-in-from-top-2 duration-300"
         >
             <div className="max-h-[600px] overflow-y-auto scroll-smooth custom-scrollbar">
                 {tabs.map((tab) => {
