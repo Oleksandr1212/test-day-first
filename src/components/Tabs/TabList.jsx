@@ -168,13 +168,14 @@ export function TabList() {
                         <OverflowMenu
                             tabs={overflowTabs}
                             activeTabId={activeTabId}
+                            isOpen={isOverflowOpen}
+                            onToggle={setIsOverflowOpen}
                             onSelect={(t) => {
                                 setActiveTabId(t.id);
                                 setIsOverflowOpen(false);
                             }}
                             onClose={closeTab}
                             onPin={togglePin}
-                            isOpen={isOverflowOpen}
                         />
                     </div>
                 )}
