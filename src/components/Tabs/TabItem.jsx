@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Pin, PinOff } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -46,12 +47,14 @@ export function TabItem({ tab, isActive, onSelect, onClose, onPin, isOverflow = 
             {...listeners}
             onClick={() => onSelect(tab)}
             onContextMenu={handleContextMenu}
+            title={tab.pinned ? tab.title : undefined}
             className={cn(
                 "group relative flex items-center h-[40px] px-4 min-w-[120px] max-w-[200px] cursor-pointer select-none transition-all duration-150 border-r border-[#dee2e6]",
                 isActive
                     ? "bg-white text-[#1a1c1e] border-t-[3px] border-[#1877f2] font-semibold z-10 -mt-[3px] h-[43px] shadow-[0_-1px_3px_rgba(0,0,0,0.05)]"
                     : "bg-[#f8f9fa] text-[#5f6368] hover:bg-[#eceef1]",
                 isDragging && "opacity-50 shadow-lg scale-105 z-50",
+                showMenu && "z-30",
                 tab.pinned && "min-w-[48px] max-w-[48px] px-2 justify-center",
                 className
             )}
@@ -89,10 +92,11 @@ export function TabItem({ tab, isActive, onSelect, onClose, onPin, isOverflow = 
                 </div>
             )}
 
-            {showMenu && (
+            {showMenu && createPortal(
                 <div
-                    className="fixed bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] rounded border border-gray-200 py-1.5 z-[100] min-w-[140px]"
+                    className="fixed bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] rounded border border-gray-200 py-1.5 z-[9999] min-w-[140px]"
                     style={{ left: menuPos.x, top: menuPos.y }}
+                    onClick={(e) => e.stopPropagation()}
                 >
                     <button
                         onClick={(e) => {
@@ -100,13 +104,15 @@ export function TabItem({ tab, isActive, onSelect, onClose, onPin, isOverflow = 
                             onPin();
                             setShowMenu(false);
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-1.5 text-[13px] text-[#3c4043] hover:bg-[#f1f3f4] transition-colors"
+                        className="w-full flex items-center gap-3 px-3 py-1.5 text-[13px] text-[#3c4043] hover:bg-[#f1f3f4] transition-colors text-left"
                     >
                         <Pin size={14} className="text-[#5f6368]" />
                         {tab.pinned ? "Tab lösen" : "Tab anpinnen"}
                     </button>
-                </div>
+                </div>,
+                document.body
             )}
+
         </div>
     );
 }
