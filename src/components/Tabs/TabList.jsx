@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { initializeAuth, loadTabs, saveTabs, migrateFromLocalStorage, initializeNewUser } from '../../firebase/tabsService';
+import { INITIAL_TABS, ICON_MAP } from '../../firebase/defaultTabs';
 import {
     DndContext,
     closestCenter,
@@ -19,67 +21,53 @@ import { OverflowMenu } from './OverflowMenu';
 import { ChevronDown, LayoutDashboard, Landmark, Phone, UserRound, ShoppingBag, PieChart, Mail, Settings, HelpCircle, Package, ListTodo, ShoppingCart, Receipt } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
-const INITIAL_TABS = [
-    { id: 'lagerverwaltung', title: 'Lagerverwaltung', url: '/lagerverwaltung', icon: Package, pinned: true },
-    { id: 'dashboard', title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, pinned: false },
-    { id: 'banking', title: 'Banking', url: '/banking', icon: Landmark, pinned: false },
-    { id: 'telefonie', title: 'Telefonie', url: '/telefonie', icon: Phone, pinned: false },
-    { id: 'accounting', title: 'Accounting', url: '/accounting', icon: UserRound, pinned: false },
-    { id: 'verkauf', title: 'Verkauf', url: '/verkauf', icon: ShoppingBag, pinned: false },
-    { id: 'statistik', title: 'Statistik', url: '/statistik', icon: PieChart, pinned: false },
-    { id: 'post-office', title: 'Post Office', url: '/post-office', icon: Mail, pinned: false },
-    { id: 'administration', title: 'Administration', url: '/administration', icon: Settings, pinned: false },
-    { id: 'help', title: 'Help', url: '/help', icon: HelpCircle, pinned: false },
-    { id: 'warenbestand', title: 'Warenbestand', url: '/warenbestand', icon: Package, pinned: false },
-    { id: 'auswahllisten', title: 'Auswahllisten', url: '/auswahllisten', icon: ListTodo, pinned: false },
-    { id: 'einkauf', title: 'Einkauf', url: '/einkauf', icon: ShoppingCart, pinned: false },
-    { id: 'rechn', title: 'Rechn', url: '/rechn', icon: Receipt, pinned: false },
-];
 
 
 export function TabList() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const [tabs, setTabs] = useState(() => {
-        const saved = localStorage.getItem('tabs-layout');
-        const iconMap = {
-            lagerverwaltung: Package,
-            dashboard: LayoutDashboard,
-            banking: Landmark,
-            telefonie: Phone,
-            accounting: UserRound,
-            verkauf: ShoppingBag,
-            statistik: PieChart,
-            'post-office': Mail,
-            administration: Settings,
-            help: HelpCircle,
-            warenbestand: Package,
-            auswahllisten: ListTodo,
-            einkauf: ShoppingCart,
-            rechn: Receipt
+    const [tabs, setTabs] = useState(INITIAL_TABS);
+    const [userId, setUserId] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const initFirebase = async () => {
+            try {
+                const uid = await initializeAuth();
+                setUserId(uid);
+
+                await migrateFromLocalStorage(uid);
+
+                const firebaseTabs = await loadTabs(uid);
+                if (firebaseTabs && firebaseTabs.length > 0) {
+                    const tabsWithIcons = firebaseTabs.map(t => ({
+                        ...t,
+                        icon: ICON_MAP[t.id] || Package
+                    }));
+
+                    const initialIds = INITIAL_TABS.map(t => t.id);
+                    const savedIds = tabsWithIcons.map(t => t.id);
+                    const missingTabs = INITIAL_TABS.filter(t => !savedIds.includes(t.id));
+
+                    if (missingTabs.length > 0) {
+                        setTabs([...tabsWithIcons, ...missingTabs]);
+                    } else {
+                        setTabs(tabsWithIcons);
+                    }
+                } else {
+                    await initializeNewUser(uid, INITIAL_TABS);
+                    setTabs(INITIAL_TABS);
+                }
+            } catch (error) {
+                console.error('Firebase initialization failed:', error);
+            } finally {
+                setIsLoading(false);
+            }
         };
 
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                const savedTabs = parsed.map(t => ({ ...t, icon: iconMap[t.id] || Package }));
-
-                const initialIds = INITIAL_TABS.map(t => t.id);
-                const savedIds = savedTabs.map(t => t.id);
-                const missingTabs = INITIAL_TABS.filter(t => !savedIds.includes(t.id));
-
-                if (missingTabs.length > 0) {
-                    return [...savedTabs, ...missingTabs];
-                }
-                return savedTabs;
-            } catch (e) {
-                console.error("Failed to parse saved tabs", e);
-                return INITIAL_TABS;
-            }
-        }
-        return INITIAL_TABS;
-    });
+        initFirebase();
+    }, []);
 
 
     const [activeTabId, setActiveTabId] = useState(null);
@@ -106,14 +94,16 @@ export function TabList() {
     );
 
     useEffect(() => {
-        localStorage.setItem('tabs-layout', JSON.stringify(tabs.map(({ icon, ...rest }) => rest)));
-    }, [tabs]);
+        if (userId && !isLoading) {
+            saveTabs(userId, tabs);
+        }
+    }, [tabs, userId, isLoading]);
 
     useEffect(() => {
         const handleResize = () => {
             if (!containerRef.current) return;
 
-            const containerWidth = containerRef.current.offsetWidth - 100; 
+            const containerWidth = containerRef.current.offsetWidth - 100;
             let currentWidth = 0;
             const newVisible = [];
             const newOverflow = [];
